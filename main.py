@@ -73,15 +73,14 @@ def add_image_to_flowbox(path):
 	img_w.set_from_pixbuf(pbuf)
 	toot_image_flowbox.insert(img_w, -1)
 	img_w.show()
-	img_w.mindex=len(images_to_toot)
+	img_w.value=path
 	images_to_toot.append(path)
 	update_show_delete()
 
-def remove_image_from_flowbox(child, index):
+def remove_image_from_flowbox(child):
 	toot_image_flowbox.remove(child)
-	del images_to_toot[index]
+	del images_to_toot[images_to_toot.index(child.get_child().value)]
 	update_show_delete()
-
 
 class Handler:
 
@@ -100,11 +99,8 @@ class Handler:
 
 	def on_deleteImageButton_clicked(self, btn):
 		child=toot_image_flowbox.get_selected_children()[0]
-		remove_image_from_flowbox(
-			child,
-			child.get_child().mindex
-		)
-		print(child, child.get_child().mindex)
+		print(child, images_to_toot.index(child.get_child().value))
+		remove_image_from_flowbox(child)
 
 builder.connect_signals(Handler())
 
