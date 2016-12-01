@@ -63,9 +63,12 @@ class MastodonClient:
 			group=None,
 			target=func,
 			name=None,
-			args=args,
-			kwargs={}
+			args=args
 		)
+		t.start()
+		#t.run()
+		#t.join()
+		return t
 
 	def toot(self, text):
 		if len(text) > 500:
@@ -74,4 +77,4 @@ class MastodonClient:
 		if len(text) == 0 or text is None:
 			raise ValueError('Toot is empty or None')
 			return
-		self._do_async(self.mclient.toot, (text))
+		return self._do_async(self.mclient.toot, ([text]))

@@ -85,6 +85,13 @@ def remove_image_from_flowbox(child):
 	del images_to_toot[images_to_toot.index(child.get_child().value)]
 	update_show_delete()
 
+def wait_for_thread(thread):
+	while thread.is_alive():
+			while Gtk.events_pending():
+				Gtk.main_iteration()
+	return
+
+
 class Handler:
 
 	def onDeleteWindow(self, *args):
@@ -110,7 +117,8 @@ class Handler:
 
 
 	def on_tootButton_clicked(self, btn):
-		mastodon_cl.toot(self._get_buf_text())
+		t = mastodon_cl.toot(self._get_buf_text())
+		wait_for_thread(t)
 		new_toot_textbuf.set_text('')
 
 	def on_tootImageFCButton_file_set(self, btn):
