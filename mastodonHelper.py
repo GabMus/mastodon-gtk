@@ -37,6 +37,9 @@ def read_config():
 	return json.loads(configtxt)
 
 class MastodonClient:
+	
+	media_list=None
+
 	def __init__(self):
 		self.config_dict=read_config()
 		self.username=self.config_dict['username']
@@ -70,11 +73,26 @@ class MastodonClient:
 		#t.join()
 		return t
 
-	def toot(self, text):
+	def _load_pics(self, text, pic_list):
+		media_list_toret=[]
+		for pic in pic_list:
+			media_list_toret.append(self.mclient.media_post(pic))
+		self.media_list=media_list_toret
+		return
+
+	def toot(self, text, pic_list=None, media_ids=None, in_reply_to=None):
 		if len(text) > 500:
 			raise ValueError('Toot longer than 500 characters')
 			return
 		if len(text) == 0 or text is None:
 			raise ValueError('Toot is empty or None')
 			return
-		return self._do_async(self.mclient.toot, ([text]))
+		if not media_ids is None or not in_reply_to is None:
+			return self._do_async(
+				self.mclient.status_post,
+				(text,in_reply_to,media_ids),
+			)
+		if pic_list is None:
+			return self._do_async(self.mclient.toot, ([text]))
+		else:
+			return self._do_async(self._load_pics, ([text],pic_list))

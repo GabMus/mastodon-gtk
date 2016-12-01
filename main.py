@@ -11,8 +11,10 @@ builder = Gtk.Builder()
 builder.add_from_file(EXEC_FOLDER + "ui.glade")
 HOME = os.environ.get('HOME')
 
-# settings = Gtk.Settings.get_default()
-# settings.set_property("gtk-application-prefer-dark-theme", True)
+IMG_CHAR_SIZE=36
+
+settings = Gtk.Settings.get_default()
+settings.set_property("gtk-application-prefer-dark-theme", True)
 
 class App(Gtk.Application):
 
@@ -57,8 +59,11 @@ mastodon_cl=mastodonHelper.MastodonClient()
 toot_btn=builder.get_object('tootButton')
 
 new_toot_textbuf=builder.get_object('newTootTextBuffer')
+new_toot_text_view=builder.get_object('newTootTextView')
 toot_charnum_label=builder.get_object('tootCharnumLabel')
 toot_image_flowbox=builder.get_object('tootImageFlowbox')
+
+toot_spinner = builder.get_object('tootSpinner')
 
 delete_image_btn=builder.get_object('deleteImageButton')
 
@@ -91,14 +96,13 @@ def wait_for_thread(thread):
 				Gtk.main_iteration()
 	return
 
-
 class Handler:
 
 	def onDeleteWindow(self, *args):
 		app.quit()
 
 	def on_newTootTextBuffer_changed(self, *args):
-		l = len(self._get_buf_text())
+		l = len(self._get_buf_text())+(IMG_CHAR_SIZE*len(images_to_toot))
 		if l>500:
 			toot_btn.set_sensitive(False)
 		else:
@@ -117,18 +121,43 @@ class Handler:
 
 
 	def on_tootButton_clicked(self, btn):
-		t = mastodon_cl.toot(self._get_buf_text())
+		has_pics=False
+		toot_spinner.start()
+		new_toot_text_view.set_sensitive(False)
+		toot_btn.set_sensitive(False)
+		if len(images_to_toot) == 0 or len(images_to_toot) > 4:
+			t = mastodon_cl.toot(self._get_buf_text(), None)
+		else:
+			t = mastodon_cl.toot(self._get_buf_text(), images_to_toot)
+			has_pics=True
 		wait_for_thread(t)
+		if has_pics:
+			pic_dic=mastodon_cl.media_list
+			mastodon_cl.media_list=None
+			txt_to_toot=self._get_buf_text()
+			media_ids=[]
+			for dic in pic_dic:
+				txt_to_toot+=' '+dic['text_url']
+				media_ids.append(dic['id'])
+			t = mastodon_cl.toot(txt_to_toot, None, media_ids, None)
+			wait_for_thread(t)
 		new_toot_textbuf.set_text('')
+		new_toot_text_view.set_sensitive(True)
+		toot_spinner.stop()
+		toot_btn.set_sensitive(True)
+		toot_charnum_label.set_text('0')
+
 
 	def on_tootImageFCButton_file_set(self, btn):
 		img_path=btn.get_filename()
 		add_image_to_flowbox(img_path)
+		self.on_newTootTextBuffer_changed(None)
 
 	def on_deleteImageButton_clicked(self, btn):
 		child=toot_image_flowbox.get_selected_children()[0]
 		print(child, images_to_toot.index(child.get_child().value))
 		remove_image_from_flowbox(child)
+		self.on_newTootTextBuffer_changed(None)
 
 builder.connect_signals(Handler())
 
