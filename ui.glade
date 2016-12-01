@@ -10,7 +10,9 @@
       <mime-type>image/gif</mime-type>
     </mime-types>
   </object>
-  <object class="GtkTextBuffer" id="newTootTextBuffer"/>
+  <object class="GtkTextBuffer" id="newTootTextBuffer">
+    <signal name="end-user-action" handler="on_newTootTextBuffer_changed" swapped="no"/>
+  </object>
   <object class="GtkApplicationWindow" id="window">
     <property name="width_request">600</property>
     <property name="height_request">400</property>
@@ -162,7 +164,7 @@
                         <property name="label" translatable="yes">%charnum%</property>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
+                        <property name="expand">True</property>
                         <property name="fill">True</property>
                         <property name="position">1</property>
                       </packing>

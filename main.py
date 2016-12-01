@@ -54,7 +54,10 @@ class App(Gtk.Application):
 app = App()
 mastodon_cl=mastodonHelper.MastodonClient()
 
+toot_btn=builder.get_object('tootButton')
+
 new_toot_textbuf=builder.get_object('newTootTextBuffer')
+toot_charnum_label=builder.get_object('tootCharnumLabel')
 toot_image_flowbox=builder.get_object('tootImageFlowbox')
 
 delete_image_btn=builder.get_object('deleteImageButton')
@@ -87,16 +90,27 @@ class Handler:
 	def onDeleteWindow(self, *args):
 		app.quit()
 
-	def on_tootButton_clicked(self, btn):
+	def on_newTootTextBuffer_changed(self, *args):
+		l = len(self._get_buf_text())
+		if l>500:
+			toot_btn.set_sensitive(False)
+		else:
+			toot_btn.set_sensitive(True)
+		toot_charnum_label.set_text(str(l))
+
+	def _get_buf_text(self):
 		start_iter = new_toot_textbuf.get_start_iter()
 		end_iter = new_toot_textbuf.get_end_iter()
-		mastodon_cl.toot(
-			new_toot_textbuf.get_text(
-				start_iter,
-				end_iter,
-				True
-			)
+		to_ret=new_toot_textbuf.get_text(
+			start_iter,
+			end_iter,
+			True
 		)
+		return to_ret
+
+
+	def on_tootButton_clicked(self, btn):
+		mastodon_cl.toot(self._get_buf_text())
 		new_toot_textbuf.set_text('')
 
 	def on_tootImageFCButton_file_set(self, btn):
