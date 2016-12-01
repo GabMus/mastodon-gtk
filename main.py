@@ -52,9 +52,36 @@ class App(Gtk.Application):
 		self.quit()
 
 app = App()
-mastodon_cl=mastodonHelper.MastodonClient()
+#mastodon_cl=mastodonHelper.MastodonClient()
 
 new_toot_textbuf=builder.get_object('newTootTextBuffer')
+toot_image_flowbox=builder.get_object('tootImageFlowbox')
+
+delete_image_btn=builder.get_object('deleteImageButton')
+
+images_to_toot=[]
+
+def update_show_delete():
+	if len(images_to_toot) > 0:
+		delete_image_btn.show()
+	else:
+		delete_image_btn.hide()
+
+def add_image_to_flowbox(path):
+	pbuf=GdkPixbuf.Pixbuf().new_from_file_at_scale(path, -1, 100, True)
+	img_w=Gtk.Image()
+	img_w.set_from_pixbuf(pbuf)
+	toot_image_flowbox.insert(img_w, -1)
+	img_w.show()
+	img_w.mindex=len(images_to_toot)
+	images_to_toot.append(path)
+	update_show_delete()
+
+def remove_image_from_flowbox(child, index):
+	toot_image_flowbox.remove(child)
+	del images_to_toot[index]
+	update_show_delete()
+
 
 class Handler:
 
@@ -67,6 +94,17 @@ class Handler:
 		)
 		new_toot_textbuf.set_text('')
 
+	def on_tootImageFCButton_file_set(self, btn):
+		img_path=btn.get_filename()
+		add_image_to_flowbox(img_path)
+
+	def on_deleteImageButton_clicked(self, btn):
+		child=toot_image_flowbox.get_selected_children()[0]
+		remove_image_from_flowbox(
+			child,
+			child.get_child().mindex
+		)
+		print(child, child.get_child().mindex)
 
 builder.connect_signals(Handler())
 
