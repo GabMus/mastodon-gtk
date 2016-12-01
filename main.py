@@ -52,7 +52,7 @@ class App(Gtk.Application):
 		self.quit()
 
 app = App()
-#mastodon_cl=mastodonHelper.MastodonClient()
+mastodon_cl=mastodonHelper.MastodonClient()
 
 new_toot_textbuf=builder.get_object('newTootTextBuffer')
 toot_image_flowbox=builder.get_object('tootImageFlowbox')
@@ -88,8 +88,14 @@ class Handler:
 		app.quit()
 
 	def on_tootButton_clicked(self, btn):
+		start_iter = new_toot_textbuf.get_start_iter()
+		end_iter = new_toot_textbuf.get_end_iter()
 		mastodon_cl.toot(
-			new_toot_textbuf.get_text()
+			new_toot_textbuf.get_text(
+				start_iter,
+				end_iter,
+				True
+			)
 		)
 		new_toot_textbuf.set_text('')
 
